@@ -37,6 +37,19 @@ class SingleFileDataset(Dataset):
             l = 1
         return seq, l
 
+class SingleFileTestDataset(Dataset):
+    def __init__(self, datafile, label) -> None:
+        self.data = pd.read_csv(datafile)
+        self.sequences = self.data.iloc[:,0]
+        self.label = label
+
+    def __len__(self):
+        return len(self.sequences)
+
+    def __getitem__(self, index):
+        seq = self.sequences[index]
+        return seq, self.label
+
 class ToyboxDataset(Dataset):
     def __init__(self) -> None:
         self.labels = [0, 1]
