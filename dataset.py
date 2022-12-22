@@ -32,23 +32,27 @@ class SingleFileDataset(Dataset):
         seq = self.sequences[index]
         cat = self.categories[index]
         if cat == 'LLPS+':
-            l = 0
-        else:
             l = 1
+        else:
+            l = 0
         return seq, l
 
 class SingleFileTestDataset(Dataset):
-    def __init__(self, datafile, label) -> None:
+    def __init__(self, datafile, threshold=2000) -> None:
         self.data = pd.read_csv(datafile)
-        self.sequences = self.data.iloc[:,0]
-        self.label = label
+        self.sequences = self.data['sequences']
+        self.labels = self.data['labels']
+        self.threshold = threshold
 
     def __len__(self):
         return len(self.sequences)
 
     def __getitem__(self, index):
         seq = self.sequences[index]
-        return seq, self.label
+        label = self.labels[index]
+        if len(seq) > self.threshold:
+            seq = seq[0:self.threshold]
+        return seq, label
 
 class ToyboxDataset(Dataset):
     def __init__(self) -> None:

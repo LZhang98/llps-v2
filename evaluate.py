@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 from model import Model
 from dataset import SingleFileTestDataset
 from torch.utils.data import DataLoader
+import time
+
+start_time = time.time()
 
 print('=====================HYPERPARAMS======================')
 num_epochs = 200
@@ -13,7 +16,7 @@ model_dim = 320
 num_heads = 4
 ff_dim = 320
 random_seed = 69
-batch_size = 8
+batch_size = 5
 dropout = 0.3
 loss_function = torch.nn.BCELoss()
 model_name = '2022-12-15_full_e200_lr-4_dropout-0.3'
@@ -40,49 +43,45 @@ my_model.eval()
 
 print('=====================DATA======================')
 
-data_dir = 'llps-v2/data/'
-print(f'pos_file: {data_dir} + ext_pos.csv')
-print(f'neg_file: {data_dir} + ext_neg.csv')
-pos_data = SingleFileTestDataset(data_dir + 'ext_pos.csv', 0)
-neg_data = SingleFileTestDataset(data_dir + 'ext_neg.csv', 1)
-
-pos_loader = DataLoader(pos_data, batch_size=batch_size, shuffle=False)
-neg_loader = DataLoader(neg_data, batch_size=batch_size, shuffle=False)
+data_file = 'llps-v2/data/test_set.csv'
+print(data_file)
+test_set = SingleFileTestDataset(data_file, threshold=2000)
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
+print(len(test_set))
 
 print('=====================EVALUATION======================')
 
-y_score = torch.tensor([])
-y_true = torch.tensor([])
+with open(f'llps-v2/output/{model_name}_eval_log.csv', 'a') as outfile:
+    outfile.write('score, label\n')
+
+print(f'llps-v2/output/{model_name}_eval_log.csv')
+
+y_score = []
+y_true = []
 correct = 0
 total = 0
+
 with torch.no_grad():
-    for i, data in enumerate(pos_loader):
+    for data in iter(test_loader):
         x, y = data
         inputs = []
         for n in range(len(x)):
             inputs.append((y[n], x[n]))
-        
-        y_true = torch.hstack(y_true, y)
-        outputs = my_model(inputs).squeeze().cpu()
+
+        y_true.extend(y.tolist())
+        outputs = my_model(inputs).squeeze().detach().cpu()
 
         total += len(inputs)
-        correct += (abs(y_score - y_true) < 0.5).sum().item()
+        correct += (abs(outputs - y) < 0.5).sum().item()
 
-        y_score = torch.hstack(y_score, outputs)
-    
-    for i, data in enumerate(neg_loader):
-        x, y = data
-        inputs = []
-        for n in range(len(x)):
-            inputs.append((y[n], x[n]))
-        
-        y_true = torch.hstack(y_true, y)
-        outputs = my_model(inputs)
+        y_score.extend(outputs.tolist())
 
-        y_score = torch.hstack(y_score, outputs)
-
-print(y_score)
-print(y_true)
+print(y_score, len(y_score))
+print(y_true, len(y_true))
+with open(f'llps-v2/output/{model_name}_eval_log.csv', 'w') as outfile:
+    outfile.write('scores,labels\n')
+    for i in range(len(y_score)):
+        outfile.write(f'{y_score[i]}{y_true[i]}\n')
 
 print('=====================METRICS======================')
 
@@ -111,3 +110,7 @@ plt.ylabel('Precision')
 plot_f = f'llps-v2/figures/{model_name}_prc.png'
 plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
+
+end_time = time.time()
+
+print(f'Elapsed: {end_time - start_time}')
