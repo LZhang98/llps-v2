@@ -19,7 +19,8 @@ random_seed = 69
 batch_size = 5
 dropout = 0.3
 loss_function = torch.nn.BCELoss()
-model_name = '2022-12-15_full_e200_lr-4_dropout-0.3'
+model_name = '2022-12-21_full_e200_lr-4_dropout-0.3'
+# model_name = '2022-12-22_random_baseline'
 path = '/cluster/projects/kumargroup/luke/output/v2/'
 
 print(f'num_epochs: {num_epochs}')
@@ -43,7 +44,7 @@ my_model.eval()
 
 print('=====================DATA======================')
 
-data_file = 'llps-v2/data/test_set.csv'
+data_file = 'llps-v2/data/test_set_1_pos.csv'
 print(data_file)
 test_set = SingleFileTestDataset(data_file, threshold=2000)
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
@@ -51,10 +52,8 @@ print(len(test_set))
 
 print('=====================EVALUATION======================')
 
-with open(f'llps-v2/output/{model_name}_eval_log.csv', 'a') as outfile:
-    outfile.write('score, label\n')
-
-print(f'llps-v2/output/{model_name}_eval_log.csv')
+logfile = f'llps-v2/output/{model_name}_eval_log_2000.csv'
+print(logfile)
 
 y_score = []
 y_true = []
@@ -74,14 +73,17 @@ with torch.no_grad():
         total += len(inputs)
         correct += (abs(outputs - y) < 0.5).sum().item()
 
-        y_score.extend(outputs.tolist())
+        if len(inputs) > 1:
+            y_score.extend(outputs.tolist())
+        else:
+            y_score.append(outputs.item())
 
 print(y_score, len(y_score))
 print(y_true, len(y_true))
-with open(f'llps-v2/output/{model_name}_eval_log.csv', 'w') as outfile:
+with open(logfile, 'w') as outfile:
     outfile.write('scores,labels\n')
     for i in range(len(y_score)):
-        outfile.write(f'{y_score[i]}{y_true[i]}\n')
+        outfile.write(f'{y_score[i]},{y_true[i]}\n')
 
 print('=====================METRICS======================')
 
