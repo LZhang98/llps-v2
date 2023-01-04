@@ -7,7 +7,7 @@ class Encoder (torch.nn.Module):
         self.model_type = 'Encoder'
         self.pos_encoder = PositionalEncoding(model_dim, dropout)
 
-        encoder_layers = torch.nn.TransformerEncoderLayer(model_dim, num_heads, ff_dim, dropout)
+        encoder_layers = torch.nn.TransformerEncoderLayer(model_dim, num_heads, ff_dim, dropout, batch_first=True)
         self.encoder = torch.nn.TransformerEncoder(encoder_layers, num_layers)
     
     def forward(self, x):
