@@ -5,8 +5,17 @@ from model import Model
 from dataset import SingleFileTestDataset
 from torch.utils.data import DataLoader
 import time
+import sys
 
 start_time = time.time()
+
+print('=====================INPUTS===========================')
+
+print(f'model_name: {sys.argv[1]}')
+print(f'dataset: {sys.argv[2]}')
+print(f'batch_size: {sys.argv[3]}')
+print(f'threshold: {sys.argv[4]}')
+print(f'logfile: {sys.argv[5]}')
 
 print('=====================HYPERPARAMS======================')
 num_epochs = 200
@@ -16,11 +25,10 @@ model_dim = 320
 num_heads = 4
 ff_dim = 320
 random_seed = 69
-batch_size = 5
+batch_size = int(sys.argv[3])
 dropout = 0.3
 loss_function = torch.nn.BCELoss()
-model_name = '2022-12-21_full_e200_lr-4_dropout-0.3'
-# model_name = '2022-12-22_random_baseline'
+model_name = sys.argv[1]
 path = '/cluster/projects/kumargroup/luke/output/v2/'
 
 print(f'num_epochs: {num_epochs}')
@@ -44,15 +52,15 @@ my_model.eval()
 
 print('=====================DATA======================')
 
-data_file = 'llps-v2/data/test_set_1_pos.csv'
+data_file = sys.argv[2]
 print(data_file)
-test_set = SingleFileTestDataset(data_file, threshold=2000)
+test_set = SingleFileTestDataset(data_file, threshold=int(sys.argv[4]))
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 print(len(test_set))
 
 print('=====================EVALUATION======================')
 
-logfile = f'llps-v2/output/{model_name}_eval_log_2000.csv'
+logfile = f'llps-v2/output/{sys.argv[5]}.csv'
 print(logfile)
 
 y_score = []
@@ -61,6 +69,7 @@ correct = 0
 total = 0
 
 with torch.no_grad():
+    
     for data in iter(test_loader):
         x, y = data
         inputs = []

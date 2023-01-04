@@ -12,4 +12,5 @@
 
 source ~/my_env/bin/activate
 
-python3 llps-v2/evaluate.py
+# model_name dataset batch_size treshold logfile
+python3 llps-v2/evaluate.py 2022-12-21_full_e200_lr-4_dropout-0.3 llps-v2/data/test_set_1_pos.csv 5 2000 testlog
