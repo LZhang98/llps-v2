@@ -5,8 +5,16 @@ from model import Model
 from dataset import SingleFileTestDataset, SingleFileDataset
 from torch.utils.data import DataLoader
 import time
+import sys
 
 start_time = time.time()
+
+print('=====================INPUTS========================')
+
+for i in range(len(sys.argv)):
+    print(f'{i} {sys.argv[i]}')
+
+sys.exit()
 
 print('=====================HYPERPARAMS======================')
 num_epochs = 200
