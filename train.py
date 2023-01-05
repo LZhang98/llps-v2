@@ -6,22 +6,34 @@ from model import Model
 from datetime import date
 from esm_pretrained import ESM
 import time
+import sys
 
 if __name__ == '__main__':
     
     start_time = time.time()
 
+    print('=====================INPUTS======================')
+    
+    if len(sys.argv) != 5:
+        print('param error. exiting.')
+        sys.exit()
+
+    print(f'num_epochs: {sys.argv[1]}')
+    print(f'learning_rate: {sys.argv[2]}')
+    print(f'batch_size: {sys.argv[3]}')
+    print(f'dropout: {sys.argv[4]}')
+
     # Hyperparams
     print('=====================HYPERPARAMS======================')
-    num_epochs = 200
-    learning_rate = 1e-4
+    num_epochs = int(sys.argv[1])
+    learning_rate = float(sys.argv[2])
     num_layers = 1
     model_dim = 320
     num_heads = 4
     ff_dim = 320
     random_seed = 69
-    batch_size = 8
-    dropout = 0.3
+    batch_size = int(sys.argv[3])
+    dropout = float(sys.argv[4])
     loss_function = torch.nn.BCELoss()
 
     today = str(date.today())
