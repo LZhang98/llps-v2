@@ -13,4 +13,4 @@
 source ~/my_env/bin/activate
 
 # model_name dataset batch_size threshold logfile
-python3 llps-v2/evaluate.py 2023-01-04_full_e200_lr-4_dropout-0.3 llps-v2/data/test_set_1_pos.csv 8 2000 2023-01-04-eval
+python3 llps-v2/evaluate.py 2023-01-04_full_e200_lr-4_dropout-0.3 llps-v2/data/test_8_short_seqs.csv 1 2000 2023-01-04-eval1
