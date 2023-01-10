@@ -20,8 +20,9 @@ class CustomDataset(Dataset):
         return embedding, label
 
 class SingleFileDataset(Dataset):
-    def __init__(self, datafile) -> None:
+    def __init__(self, datafile, threshold=None) -> None:
         self.data = pd.read_csv(datafile)
+        self.data = self.data[len(self.data['Sequence']) <= threshold]
         self.sequences = self.data['Sequence']
         self.categories = self.data['Category']
 

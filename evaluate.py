@@ -6,8 +6,13 @@ from dataset import SingleFileTestDataset
 from torch.utils.data import DataLoader
 import time
 import sys
+import os
 
 start_time = time.time()
+loop_benchmarks = []
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+print(dir_path)
 
 print('=====================INPUTS===========================')
 
@@ -29,7 +34,7 @@ batch_size = int(sys.argv[3])
 dropout = 0.3
 loss_function = torch.nn.BCELoss()
 model_name = sys.argv[1]
-path = '/cluster/projects/kumargroup/luke/output/v2/'
+path = dir_path + '/sample-model/'
 
 print(f'num_epochs: {num_epochs}')
 print(f'learning_rate: {learning_rate}')
@@ -50,17 +55,23 @@ my_model.load_state_dict(torch.load(f'{path}{model_name}.pt'))
 print(my_model)
 my_model.eval()
 
+model_time = time.time()
+print(f'Model init: {model_time - start_time}')
+
 print('=====================DATA======================')
 
-data_file = sys.argv[2]
+data_file = dir_path + '/data/' + sys.argv[2]
 print(data_file)
 test_set = SingleFileTestDataset(data_file, threshold=int(sys.argv[4]))
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
 print(len(test_set))
 
+data_time = time.time()
+print(f'Data load: {data_time - model_time}')
+
 print('=====================EVALUATION======================')
 
-logfile = f'llps-v2/output/{sys.argv[5]}.csv'
+logfile = f'{dir_path}/output/{sys.argv[5]}.csv'
 print(logfile)
 
 y_score = []
@@ -71,13 +82,19 @@ total = 0
 with torch.no_grad():
     
     for data in iter(test_loader):
+
+        loop_benchmarks.append(time.time())
         x, y = data
         inputs = []
         for n in range(len(x)):
             inputs.append((y[n], x[n]))
 
+        loop_benchmarks.append(time.time())
+
         y_true.extend(y.tolist())
         outputs = my_model(inputs).squeeze().detach().cpu()
+
+        loop_benchmarks.append(time.time())
 
         total += len(inputs)
         correct += (abs(outputs - y) < 0.5).sum().item()
@@ -86,6 +103,8 @@ with torch.no_grad():
             y_score.extend(outputs.tolist())
         else:
             y_score.append(outputs.item())
+        
+        print(loop_benchmarks[1] - loop_benchmarks[0], loop_benchmarks[2] - loop_benchmarks[1])
 
 print(y_score, len(y_score))
 print(y_true, len(y_true))
