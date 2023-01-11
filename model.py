@@ -12,16 +12,20 @@ class Model (torch.nn.Module):
         self.classifier = AdaptiveClassifier(model_dim=model_dim)
         self.verbose = verbose
 
+        self.esm.model.to(self.device)
         self.encoder.to(self.device)
         self.classifier.to(self.device)
 
     def forward(self, x):
         if self.verbose:
             print(x)
+        x = self.esm.convert_batch(x)
+        if self.verbose:
+            print(x)
+        x = x.to(self.device)
         x = self.esm.get_representation(x)
         if self.verbose:
             print(x.size())
-        x = x.to(self.device)
         if self.verbose:
             print(x.size())
         x = self.encoder(x)
