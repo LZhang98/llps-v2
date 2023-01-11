@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 import os
 import pandas as pd
 
@@ -20,9 +20,8 @@ class CustomDataset(Dataset):
         return embedding, label
 
 class SingleFileDataset(Dataset):
-    def __init__(self, datafile, threshold=None) -> None:
+    def __init__(self, datafile) -> None:
         self.data = pd.read_csv(datafile)
-        self.data = self.data[len(self.data['Sequence']) <= threshold]
         self.sequences = self.data['Sequence']
         self.categories = self.data['Category']
 
@@ -41,9 +40,9 @@ class SingleFileDataset(Dataset):
 class SingleFileTestDataset(Dataset):
     def __init__(self, datafile, threshold=2000) -> None:
         self.data = pd.read_csv(datafile)
+        self.data = self.data[self.data['sequences'].str.len() <= threshold]
         self.sequences = self.data['sequences']
         self.labels = self.data['labels']
-        self.threshold = threshold
 
     def __len__(self):
         return len(self.sequences)
@@ -51,8 +50,6 @@ class SingleFileTestDataset(Dataset):
     def __getitem__(self, index):
         seq = self.sequences[index]
         label = self.labels[index]
-        if len(seq) > self.threshold:
-            seq = seq[0:self.threshold]
         return seq, label
 
 class ToyboxDataset(Dataset):
@@ -72,9 +69,6 @@ class ToyboxDataset(Dataset):
         return seq, l
 
 if __name__ == '__main__':
-    dataset = SingleFileDataset('llps-v2/data/toy_dataset/ten_balanced.csv')
+    dataset = SingleFileTestDataset('llps-v2/data/test_set_1_pos.csv', 1500)
 
-    dataloader = DataLoader(dataset, batch_size=5, shuffle=True)
-
-    for i, data in enumerate(dataloader):
-        print(data)
+    print(len(dataset))
