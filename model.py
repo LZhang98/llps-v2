@@ -26,8 +26,6 @@ class Model (torch.nn.Module):
         x = self.esm.get_representation(x)
         if self.verbose:
             print(x.size())
-        if self.verbose:
-            print(x.size())
         x = self.encoder(x)
         if self.verbose:
             print(x.size())
