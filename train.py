@@ -1,10 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
 import dataset
-import numpy as np
 from model import Model
 from datetime import date
-from esm_pretrained import ESM
 import time
 import sys
 
@@ -38,7 +36,7 @@ if __name__ == '__main__':
 
     today = str(date.today())
     print(today)
-    model_name = f'{today}_full_e{num_epochs}_lr{int(np.log10(learning_rate))}_dropout-{dropout}'
+    model_name = f'{today}_bs{batch_size}'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     print(f'num_epochs: {num_epochs}')
@@ -59,17 +57,14 @@ if __name__ == '__main__':
     # DATASET
     # toy dataset first
     print('===========DATA===========')
-    # data = dataset.SingleFileDataset('llps-v2/data/toy_dataset/ten_balanced.csv')
     data = dataset.SingleFileDataset('llps-v2/data/training_data_features.csv')
-
+    print(len(data))
     dataloader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     # MODEL AND OPTIMIZER
     print('===========MODEL===========')
-    my_esm = ESM(320)
     my_model = Model(device, num_layers, model_dim, num_heads, ff_dim, dropout)
     print(my_model)
-    # my_model.to(device)
     optimizer = torch.optim.Adam(my_model.parameters(), lr=learning_rate)
 
     print('===========TRAINING===========')

@@ -9,7 +9,6 @@ import sys
 import os
 
 start_time = time.time()
-loop_benchmarks = []
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 print(dir_path)
@@ -51,7 +50,7 @@ print('=====================MODEL======================')
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 my_model = Model(device, 1, 320, 4, 320, 0.3)
-my_model.load_state_dict(torch.load(f'{path}{model_name}.pt'))
+my_model.load_state_dict(torch.load(f'{path}{model_name}.pt', map_location=torch.device(device)))
 print(my_model)
 my_model.eval()
 
@@ -83,7 +82,9 @@ with torch.no_grad():
     
     for data in iter(test_loader):
 
+        loop_benchmarks = []
         loop_benchmarks.append(time.time())
+        
         x, y = data
         inputs = []
         for n in range(len(x)):
@@ -104,7 +105,7 @@ with torch.no_grad():
         else:
             y_score.append(outputs.item())
         
-        print(loop_benchmarks[1] - loop_benchmarks[0], loop_benchmarks[2] - loop_benchmarks[1])
+        # print(loop_benchmarks[1] - loop_benchmarks[0], loop_benchmarks[2] - loop_benchmarks[1])
 
 print(y_score, len(y_score))
 print(y_true, len(y_true))
@@ -142,6 +143,9 @@ plt.ylabel('Precision')
 plot_f = f'llps-v2/figures/{model_name}_prc.png'
 plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
+
+f1 = sklearn.metrics.f1_score(y_true, y_score.round())
+print(f'F1 Score: {f1}')
 
 end_time = time.time()
 

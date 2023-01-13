@@ -40,7 +40,8 @@ class SingleFileDataset(Dataset):
 class SingleFileTestDataset(Dataset):
     def __init__(self, datafile, threshold=2000) -> None:
         self.data = pd.read_csv(datafile)
-        self.data = self.data[self.data['sequences'].str.len() <= threshold]
+        if threshold > 0:
+            self.data = self.data[self.data['sequences'].str.len() <= threshold]
         self.sequences = self.data['sequences']
         self.labels = self.data['labels']
 
@@ -72,3 +73,5 @@ if __name__ == '__main__':
     dataset = SingleFileTestDataset('llps-v2/data/test_set_1_pos.csv', 1500)
 
     print(len(dataset))
+    for i in range(len(dataset)):
+        print(dataset[i])
