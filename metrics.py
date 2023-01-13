@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 model_name = '2023-01-04_full_e200_lr-4_dropout-0.3'
-df = pd.read_csv(f'llps-v2/output/2023-01-04-eval.csv')
+df = pd.read_csv(f'llps-v2/output/2023-01-04-new.csv')
 # df_pos = pd.read_csv('llps-v2/data/ext_pos.csv')
 # df_pos.columns = ['sequences']
 # df_neg = pd.read_csv('llps-v2/data/ext_neg.csv')
@@ -42,7 +42,7 @@ plt.title(f'{model_name} ROC')
 plt.xlabel('FPR')
 plt.ylabel('TPR')
 plot_f = f'llps-v2/figures/{model_name}_roc.png'
-# plt.savefig(fname=plot_f)
+plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
 
 auprc = sklearn.metrics.average_precision_score(y_true, y_score)
@@ -55,8 +55,8 @@ plt.title(f'{model_name} PRC')
 plt.xlabel('Recall')
 plt.ylabel('Precision')
 plot_f = f'llps-v2/figures/{model_name}_prc.png'
-# plt.savefig(fname=plot_f)
+plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
 
 f1 = sklearn.metrics.f1_score(y_true, y_score.round())
-print(f'F1 Score : {f1}')
+print(f'F1 Score: {f1}')
