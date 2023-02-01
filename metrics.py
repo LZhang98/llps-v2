@@ -2,21 +2,24 @@ import sklearn.metrics
 import pandas as pd
 import matplotlib.pyplot as plt
 
-model_name = '2022-12-15_full_e200_lr-4_dropout-0.3'
-df = pd.read_csv(f'llps-v2/output/{model_name}_eval_log.csv')
-df_pos = pd.read_csv('llps-v2/data/ext_pos.csv')
-df_pos.columns = ['sequences']
-df_neg = pd.read_csv('llps-v2/data/ext_neg.csv')
-df_neg.columns = ['sequences']
-df_seqs = pd.concat([df_pos, df_neg]).reset_index(drop=True)
-df_seqs = df_seqs.iloc[0:319]
-df = pd.concat([df, df_seqs], axis=1)
-print(df)
-df2 = df[df.iloc[:,2].str.len() <= 1800].reset_index(drop=True)
-print(df2)
+model_name = '2023-01-04_full_e200_lr-4_dropout-0.3'
+df = pd.read_csv(f'llps-v2/output/2023-01-04-new.csv')
+# df_pos = pd.read_csv('llps-v2/data/ext_pos.csv')
+# df_pos.columns = ['sequences']
+# df_neg = pd.read_csv('llps-v2/data/ext_neg.csv')
+# df_neg.columns = ['sequences']
+# df_seqs = pd.concat([df_pos, df_neg]).reset_index(drop=True)
+# df_seqs = df_seqs.iloc[0:319]
+# df = pd.concat([df, df_seqs], axis=1)
+# print(df)
+# df2 = df[df.iloc[:,2].str.len() <= 2000].reset_index(drop=True)
+# print(df2)
 
-y_score = df2['scores']
-y_true = df2['labels']
+# y_score = df2['scores']
+# y_true = df2['labels']
+
+y_score = df['scores']
+y_true = df['labels']
 
 correct = 0
 total = 0
@@ -34,10 +37,11 @@ print(f'AUROC: {auroc}')
 fpr, tpr, thresholds = sklearn.metrics.roc_curve(y_true, y_score)
 plt.figure(0)
 plt.plot(fpr, tpr)
+plt.text(0.5, 0.5, auroc)
 plt.title(f'{model_name} ROC')
 plt.xlabel('FPR')
 plt.ylabel('TPR')
-plot_f = f'llps-v2/figures/{model_name}_roc2.png'
+plot_f = f'llps-v2/figures/{model_name}_roc.png'
 plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
 
@@ -46,9 +50,13 @@ print(f'AUPRC: {auprc}')
 precision, recall, thresholds = sklearn.metrics.roc_curve(y_true, y_score)
 plt.figure(1)
 plt.plot(recall, precision)
+plt.text(0.5, 0.5, auprc)
 plt.title(f'{model_name} PRC')
 plt.xlabel('Recall')
 plt.ylabel('Precision')
-plot_f = f'llps-v2/figures/{model_name}_prc2.png'
+plot_f = f'llps-v2/figures/{model_name}_prc.png'
 plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
+
+f1 = sklearn.metrics.f1_score(y_true, y_score.round())
+print(f'F1 Score: {f1}')

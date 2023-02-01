@@ -17,14 +17,16 @@ class ESM():
 
     def get_representation(self, x):
 
-        batch_labels, batch_strs, batch_tokens = self.batch_converter(x)
-
         with torch.no_grad():
-            results = self.model(batch_tokens, repr_layers=[6], return_contacts=True)
+            results = self.model(x, repr_layers=[6], return_contacts=True)
 
         token_representations = results['representations'][6]
 
         return token_representations
+    
+    def convert_batch(self, x):
+        batch_labels, batch_strs, batch_tokens = self.batch_converter(x)
+        return batch_tokens
 
 if __name__ == '__main__':
     data = [

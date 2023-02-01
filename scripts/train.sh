@@ -12,4 +12,5 @@
 
 source ~/my_env/bin/activate
 
-python3 llps-v2/train.py
+# train.py num_epochs learning_rate batch_size dropout
+python3 llps-v2/train.py 300 1e-4 8 0.3
