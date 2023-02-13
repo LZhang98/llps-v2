@@ -4,15 +4,17 @@ from encoder import Encoder
 from esm_pretrained import ESM
 
 class Model (torch.nn.Module):
-    def __init__(self, device, num_layers, model_dim, num_heads, ff_dim, dropout=0.5, verbose=False) -> None:
+    def __init__(self, device, num_layers, model_dim, num_heads, ff_dim, dropout=0.5, verbose=False, is_eval=False) -> None:
         super().__init__()
         self.esm = ESM(embed_dim=model_dim)
         self.device = device
         self.encoder = Encoder(num_layers=num_layers, model_dim=model_dim, num_heads=num_heads, ff_dim=ff_dim, dropout=dropout)
         self.classifier = AdaptiveClassifier(model_dim=model_dim)
         self.verbose = verbose
+        self.is_eval = is_eval
 
-        self.esm.model.to(self.device)
+        if (not self.is_eval):
+            self.esm.model.to(self.device)
         self.encoder.to(self.device)
         self.classifier.to(self.device)
 
@@ -22,8 +24,13 @@ class Model (torch.nn.Module):
         x = self.esm.convert_batch(x)
         if self.verbose:
             print(x)
-        x = x.to(self.device)
-        x = self.esm.get_representation(x)
+        # TODO: make x to device smarter (determine if esm is sent to device or not)
+        if self.is_eval:
+            x = self.esm.get_representation(x)
+            x = x.to(self.device)
+        else:
+            x = x.to(self.device)
+            x = self.esm.get_representation(x)
         if self.verbose:
             print(x.size())
         x = self.encoder(x)
