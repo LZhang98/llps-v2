@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=test-script
-#SBATCH --mem=4G
+#SBATCH -p himem
+#SBATCH --mem=60G
 #SBATCH -N 1
 #SBATCH -c 1
 #SBATCH -t 1:00:00
