@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     today = str(date.today())
     print(today)
-    model_name = f'{today}_bs{batch_size}'
+    model_name = f'{today}_e{num_epochs}_bs{batch_size}'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     print(f'num_epochs: {num_epochs}')
@@ -57,7 +57,9 @@ if __name__ == '__main__':
     # DATASET
     # toy dataset first
     print('===========DATA===========')
-    data = dataset.SingleFileDataset('llps-v2/data/training_data_features.csv')
+    training_file = 'llps-v2/data/alt_training_set.csv'
+    data = dataset.SingleFileDataset(training_file, threshold=1500)
+    print(training_file)
     print(len(data))
     dataloader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
@@ -86,10 +88,14 @@ if __name__ == '__main__':
             for n in range(len(x)):
                 inputs.append((y[n], x[n]))
             
-            targets = y.unsqueeze(1).float().to(device)
+            if batch_size > 1:
+                targets = y.unsqueeze(1).float().to(device)
+            else:
+                targets = y.float().to(device)
 
             optimizer.zero_grad()
             outputs = my_model(inputs)
+
             loss = loss_function(outputs, targets)
             loss.backward()
             optimizer.step()
