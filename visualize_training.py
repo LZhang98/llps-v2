@@ -6,12 +6,12 @@ from model import Model
 import csv
 import matplotlib.pyplot as plt
 
-model_name = '2023-01-05_full_e200_lr-4_dropout-0.3'
+model_name = '2023-02-02_e100_bs4'
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # data = dataset.SingleFileDataset('llps-v2/data/toy_dataset/fifteen_unbalanced.csv')
-data = dataset.SingleFileDataset('llps-v2/data/training_data_features.csv')
-dataloader = DataLoader(data, batch_size=8, shuffle=False)
+# data = dataset.SingleFileDataset('llps-v2/data/training_data_features.csv')
+# dataloader = DataLoader(data, batch_size=8, shuffle=False)
 
 # print('===========MODEL===========')
 # my_model = Model(device, 1, 320, 4, 320, 0.3)
@@ -35,7 +35,7 @@ dataloader = DataLoader(data, batch_size=8, shuffle=False)
 #         print(y)
 
 print('===========VISUALIZATION===========')
-logfile = 'llps-v2/logs/2023-01-05_log.csv'
+logfile = 'llps-v2/logs/2023-02-02-log.csv'
 print(f'opening {logfile}')
 
 e = []

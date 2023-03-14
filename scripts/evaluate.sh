@@ -1,8 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=evaluate-model
+#SBATCH --job-name=evaluate-model-gpu32g
 #SBATCH -A kumargroup_gpu
 #SBATCH --mem=64G
 #SBATCH -p gpu
+#SBATCH -C gpu32g
 #SBATCH --gres=gpu:1
 #SBATCH -N 1
 #SBATCH -c 1
@@ -13,4 +14,6 @@
 source ~/my_env/bin/activate
 
 # model_name dataset batch_size threshold logfile
-python3 llps-v2/evaluate.py 2023-01-04_full_e200_lr-4_dropout-0.3 llps-v2/data/test_8_short_seqs.csv 1 2000 2023-01-04-eval1
+# $1 model name
+# $2 logfile name
+python3 llps-v2/evaluate.py $1 test_set_1_pos.csv 1 -1 $2

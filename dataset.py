@@ -20,10 +20,12 @@ class CustomDataset(Dataset):
         return embedding, label
 
 class SingleFileDataset(Dataset):
-    def __init__(self, datafile) -> None:
+    def __init__(self, datafile, threshold=-1) -> None:
         self.data = pd.read_csv(datafile)
-        self.sequences = self.data['Sequence']
-        self.categories = self.data['Category']
+        if threshold > 0:
+            self.data = self.data.loc[self.data['Sequence'].str.len() < threshold]
+        self.sequences = self.data['Sequence'].reset_index(drop=True)
+        self.categories = self.data['Source'].reset_index(drop=True)
 
     def __len__(self):
         return len(self.sequences)
@@ -31,7 +33,7 @@ class SingleFileDataset(Dataset):
     def __getitem__(self, index):
         seq = self.sequences[index]
         cat = self.categories[index]
-        if cat == 'LLPS+':
+        if cat in ['DrLLPS','PhaSePro','LLPSDB']:
             l = 1
         else:
             l = 0

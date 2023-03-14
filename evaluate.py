@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 import time
 import sys
 import os
+import numpy as np
 
 start_time = time.time()
 
@@ -33,7 +34,7 @@ batch_size = int(sys.argv[3])
 dropout = 0.3
 loss_function = torch.nn.BCELoss()
 model_name = sys.argv[1]
-path = dir_path + '/sample-model/'
+path = '/cluster/projects/kumargroup/luke/output/v2/'
 
 print(f'num_epochs: {num_epochs}')
 print(f'learning_rate: {learning_rate}')
@@ -49,7 +50,9 @@ torch.manual_seed(random_seed)
 print('=====================MODEL======================')
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-my_model = Model(device, 1, 320, 4, 320, 0.3)
+
+# Set is_eval to True to keep ESM module on CPU (saves memory?)
+my_model = Model(device, 1, 320, 4, 320, 0.3, is_eval=True)
 my_model.load_state_dict(torch.load(f'{path}{model_name}.pt', map_location=torch.device(device)))
 print(my_model)
 my_model.eval()
@@ -115,6 +118,9 @@ with open(logfile, 'w') as outfile:
         outfile.write(f'{y_score[i]},{y_true[i]}\n')
 
 print('=====================METRICS======================')
+
+y_score = np.array(y_score)
+y_true = np.array(y_true)
 
 print(f'Accuracy: {correct/total}. {correct}/{total}')
 
