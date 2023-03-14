@@ -38,7 +38,7 @@ class SingleFileDataset(Dataset):
         return seq, l
 
 class SingleFileTestDataset(Dataset):
-    def __init__(self, datafile, threshold=2000) -> None:
+    def __init__(self, datafile, threshold=-1) -> None:
         self.data = pd.read_csv(datafile)
         if threshold > 0:
             self.data = self.data[self.data['sequences'].str.len() <= threshold]
@@ -68,6 +68,23 @@ class ToyboxDataset(Dataset):
         seq = self.sequences[index]
         l = self.labels[index]
         return seq, l
+
+class ProteomeDataset(Dataset):
+    def __init__(self, datafile, seq_col_index, id_col_index, threshold=-1):
+        df = pd.read_csv(datafile)
+        if threshold > 0:
+            df = df.loc[df[seq_col_index].str.len() <= threshold]
+        self.data = df.reset_index(drop=True)
+        self.seqs = self.data[seq_col_index]
+        self.labels = self.data[id_col_index]
+
+    def __len__(self):
+        return len(self.seqs)
+    
+    def __getitem__(self, index):
+        seq = self.seqs[index]
+        label = self.labels[index]
+        return seq, label
 
 if __name__ == '__main__':
     dataset = SingleFileTestDataset('llps-v2/data/test_set_1_pos.csv', 1500)
