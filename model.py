@@ -41,6 +41,28 @@ class Model (torch.nn.Module):
             print(x.size())
         return x
 
+    def predict_scores(self, sequences, labels):
+        # probably organize as a dict
+
+        inputs = []
+        for i in range(len(sequences)):
+            inputs.append((labels[i], sequences[i]))
+        return None
+    
+    def training_step(self, batch):
+        loss = ...
+        return loss
+    
+    def validation_step(self, batch):
+        loss = ...
+        acc = ...
+        return loss, acc
+    
+    def validation_epoch_end(self, outputs):
+        epoch_loss = ...
+        epoch_acc = ...
+        return epoch_loss, epoch_acc
+
 
 if __name__ == '__main__':
 
