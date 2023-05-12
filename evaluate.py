@@ -73,11 +73,12 @@ print(f'Data load: {data_time - model_time}')
 
 print('=====================EVALUATION======================')
 
-logfile = f'{dir_path}/output/{sys.argv[5]}.csv'
+logfile = f'{dir_path}/new_eval_set/{sys.argv[5]}.csv'
 print(logfile)
 
 y_score = []
 y_true = []
+prot_id = []
 correct = 0
 total = 0
 
@@ -113,7 +114,7 @@ with torch.no_grad():
 print(y_score, len(y_score))
 print(y_true, len(y_true))
 with open(logfile, 'w') as outfile:
-    outfile.write('scores,labels\n')
+    outfile.write('scores,labels,ids\n')
     for i in range(len(y_score)):
         outfile.write(f'{y_score[i]},{y_true[i]}\n')
 

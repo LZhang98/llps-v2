@@ -1,6 +1,5 @@
 import torch
 from model import Model
-from datetime import date
 import time
 import sys
 import pandas as pd
@@ -10,18 +9,19 @@ start_time = time.time()
 # Script input args
 model_name = sys.argv[1]
 data_file = sys.argv[2]
-if len(sys.argv) == 4:
-    output_dir = sys.argv[3]
+output_name = sys.argv[3]
+if len(sys.argv) == 5:
+    output_dir = sys.argv[4]
 else:
     output_dir = 'llps-v2/predictions/'
 
 # Set up data input and output
-output_file = f'{output_dir}/{model_name}_predictions2500.csv'
+output_file = f'{output_dir}/{model_name}_{output_name}.csv'
 with open(output_file, 'w') as f:
-    f.write('Score,Uniprot ID,Type,Length,Sequence\n')
+    f.write('score,id,type,length,sequence\n')
 
 data = pd.read_csv(data_file)
-data['Length'] = data['Protein Sequence'].str.len()
+data['length'] = data['sequence'].str.len()
 
 # Initialize model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -32,10 +32,10 @@ my_model.load_state_dict(torch.load(f'{path}{model_name}.pt', map_location=torch
 num_samples = len(data)
 with torch.no_grad():
     for i in range(num_samples):
-        seq = data.at[i, 'Protein Sequence']
-        id = data.at[i, 'UniProt ID']
-        type = data.at[i,'LLPS Type']
-        length = data.at[i,'Length']
+        seq = data.at[i, 'sequence']
+        id = data.at[i, 'id']
+        type = data.at[i,'type']
+        length = data.at[i,'length']
 
         if (length < 2500):
             input = [(id, seq)]

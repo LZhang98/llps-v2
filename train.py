@@ -5,6 +5,8 @@ from model import Model
 from datetime import date
 import time
 import sys
+from torch.utils.data.sampler import SubsetRandomSampler
+import numpy as np
 
 if __name__ == '__main__':
     
@@ -20,6 +22,7 @@ if __name__ == '__main__':
     print(f'learning_rate: {sys.argv[2]}')
     print(f'batch_size: {sys.argv[3]}')
     print(f'dropout: {sys.argv[4]}')
+    print(f'training_file: {sys.argv[5]}')
 
     # Hyperparams
     print('=====================HYPERPARAMS======================')
@@ -51,17 +54,34 @@ if __name__ == '__main__':
     torch.manual_seed(random_seed)
 
     # LOGGING 
-    logfile = f'{model_name}_log.csv'
+    logfile = f'llps-v2/logs/{model_name}_log.csv'
     print(f'logfile: {logfile}')
+    with open(logfile, 'w') as f:
+        f.write('epoch,training_loss,mean_pos,mean_neg,val_loss\n')
 
     # DATASET
     # toy dataset first
     print('===========DATA===========')
-    training_file = 'llps-v2/data/alt_training_set.csv'
+    training_file = 'llps-v2/data/'+sys.argv[5]+'.csv'
+    validation_split = 0.2
     data = dataset.SingleFileDataset(training_file, threshold=1500)
     print(training_file)
-    print(len(data))
+    dataset_size = len(data)
+    print(f'dataset size: {dataset_size}')
+    indices = list(range(dataset_size))
+    split = int(np.floor(validation_split * dataset_size))
+    np.random.shuffle(indices)
+    train_indices, val_indices = indices[split:], indices[:split]
+    print(f'training split: {len(train_indices)}; validation split: {len(val_indices)}')
+
+    # Initialize samplers on splits:
+    train_sampler = SubsetRandomSampler(train_indices)
+    val_sampler = SubsetRandomSampler(val_indices)
+
+    # Initialize data loaders:
     dataloader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(data, batch_size=batch_size, sampler=train_sampler)
+    val_loader = DataLoader(data, batch_size=1, sampler=val_sampler)
 
     # MODEL AND OPTIMIZER
     print('===========MODEL===========')
@@ -70,19 +90,21 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(my_model.parameters(), lr=learning_rate)
 
     print('===========TRAINING===========')
-    # TRAINING LOOP
+
     epoch_arr = []
     pos_arr = []
     neg_arr = []
     loss_arr = []
     for epoch in range(num_epochs):
 
+        # TRAINING
+
         curr_pos = torch.tensor([])
         curr_neg = torch.tensor([])        
         # print(f'starting epoch {epoch}')
         my_model.train()
         running_loss = 0
-        for i, data in enumerate(dataloader):
+        for i, data in enumerate(train_loader):
             x, y = data
             inputs = []
             for n in range(len(x)):
@@ -115,7 +137,24 @@ if __name__ == '__main__':
         neg = torch.mean(curr_neg).item()
         pos_arr.append(pos)
         neg_arr.append(neg)        
-        print(f'{epoch}, {running_loss}, {pos}, {neg}')
+    
+        # VALIDATION
+        my_model.eval()
+        with torch.no_grad():
+            val_loss = 0
+            for i, data in enumerate(val_loader):
+                x, y = data
+                input = [(y.item(), x[0])]
+                target = y.float().to(device)
+
+                output = my_model(input)
+
+                loss = loss_function(output, target)
+                val_loss += loss
+
+        print(f'{epoch}, {running_loss}, {pos}, {neg}, {val_loss}')
+        with open(logfile, 'a') as f:
+            f.write(f'{epoch}, {running_loss}, {pos}, {neg}, {val_loss}\n')
     
     # SAVE THE MODEL
     print('===========SAVING===========')
