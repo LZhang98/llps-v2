@@ -10,13 +10,20 @@ class Model (torch.nn.Module):
         self.device = device
         self.encoder = Encoder(num_layers=num_layers, model_dim=model_dim, num_heads=num_heads, ff_dim=ff_dim, dropout=dropout)
         self.classifier = AdaptiveClassifier(model_dim=model_dim)
+
+        # wrap encoder and classifier in nn.DataParallel and send to GPU
+        model = torch.nn.Sequential(
+            self.encoder,
+            self.classifier
+        )
+        self.model = torch.nn.DataParallel(model)
+        self.model.to(self.device)
+
         self.verbose = verbose
         self.is_eval = is_eval
 
         if (not self.is_eval):
             self.esm.model.to(self.device)
-        self.encoder.to(self.device)
-        self.classifier.to(self.device)
 
     def forward(self, x):
         if self.verbose:
@@ -33,21 +40,22 @@ class Model (torch.nn.Module):
             x = self.esm.get_representation(x)
         if self.verbose:
             print(x.size())
-        x = self.encoder(x)
-        if self.verbose:
-            print(x.size())
-        x = self.classifier(x)
+        x = self.model(x)
         if self.verbose:
             print(x.size())
         return x
 
-    def predict_scores(self, sequences, labels):
-        # probably organize as a dict
+    # Used for score prediction and model interpretation
+    # TODO: input requirement of ESM embeddings is awkward: list of (label, seq) tuples. find way to fix.
+    def predict(self, sequences):
 
         inputs = []
         for i in range(len(sequences)):
-            inputs.append((labels[i], sequences[i]))
-        return None
+            inputs.append(('', sequences[i]))
+        
+        output = self(inputs)
+        
+        return output
     
     def training_step(self, batch):
         loss = ...

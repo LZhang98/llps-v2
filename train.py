@@ -1,4 +1,7 @@
 import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
+from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader
 import dataset
 from model import Model
@@ -7,6 +10,7 @@ import time
 import sys
 from torch.utils.data.sampler import SubsetRandomSampler
 import numpy as np
+import config
 
 if __name__ == '__main__':
     
@@ -14,7 +18,8 @@ if __name__ == '__main__':
 
     print('=====================INPUTS======================')
     
-    if len(sys.argv) != 5:
+    print(sys.argv)
+    if len(sys.argv) < 6:
         print('param error. exiting.')
         sys.exit()
 
@@ -23,6 +28,17 @@ if __name__ == '__main__':
     print(f'batch_size: {sys.argv[3]}')
     print(f'dropout: {sys.argv[4]}')
     print(f'training_file: {sys.argv[5]}')
+
+    if len(sys.argv) == 7:
+        print(f'tag: {sys.argv[6]}')
+        tag = sys.argv[6]
+    else:
+        print('tag: -')
+        tag = ''
+
+    for i in range(torch.cuda.device_count()):
+        print(torch.cuda.get_device_properties(i).name)
+
 
     # Hyperparams
     print('=====================HYPERPARAMS======================')
@@ -39,7 +55,7 @@ if __name__ == '__main__':
 
     today = str(date.today())
     print(today)
-    model_name = f'{today}_e{num_epochs}_bs{batch_size}'
+    model_name = f'{today}_e{num_epochs}_bs{batch_size}{tag}'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     print(f'num_epochs: {num_epochs}')
@@ -54,7 +70,7 @@ if __name__ == '__main__':
     torch.manual_seed(random_seed)
 
     # LOGGING 
-    logfile = f'llps-v2/logs/{model_name}_log.csv'
+    logfile = f'{config.training["log_location"]}{model_name}_log.csv'
     print(f'logfile: {logfile}')
     with open(logfile, 'w') as f:
         f.write('epoch,training_loss,mean_pos,mean_neg,val_loss\n')
@@ -62,7 +78,7 @@ if __name__ == '__main__':
     # DATASET
     # toy dataset first
     print('===========DATA===========')
-    training_file = 'llps-v2/data/'+sys.argv[5]+'.csv'
+    training_file = config.PROJECT_LOCATION+sys.argv[5]
     validation_split = 0.2
     data = dataset.SingleFileDataset(training_file, threshold=1500)
     print(training_file)
@@ -159,7 +175,7 @@ if __name__ == '__main__':
     # SAVE THE MODEL
     print('===========SAVING===========')
 
-    path = '/cluster/projects/kumargroup/luke/output/v2/' + model_name + '.pt'
+    path = config.model['model_save_location'] + model_name + '.pt'
     torch.save(my_model.state_dict(), path)
     print(f'Save to {path}')
 

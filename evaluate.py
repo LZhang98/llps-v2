@@ -8,6 +8,7 @@ import time
 import sys
 import os
 import numpy as np
+import config
 
 start_time = time.time()
 
@@ -34,7 +35,7 @@ batch_size = int(sys.argv[3])
 dropout = 0.3
 loss_function = torch.nn.BCELoss()
 model_name = sys.argv[1]
-path = '/cluster/projects/kumargroup/luke/output/v2/'
+path = config.model['model_save_location']
 
 print(f'num_epochs: {num_epochs}')
 print(f'learning_rate: {learning_rate}')
@@ -73,7 +74,7 @@ print(f'Data load: {data_time - model_time}')
 
 print('=====================EVALUATION======================')
 
-logfile = f'{dir_path}/new_eval_set/{sys.argv[5]}.csv'
+logfile = f'{config.eval["output_dir"]}{sys.argv[5]}.csv'
 print(logfile)
 
 y_score = []
@@ -134,7 +135,7 @@ plt.text(0.5, 0.5, auroc)
 plt.title(f'{model_name} ROC')
 plt.xlabel('FPR')
 plt.ylabel('TPR')
-plot_f = f'llps-v2/figures/{model_name}_roc.png'
+plot_f = f'{config.eval["output_dir"]}{model_name}_roc.png'
 plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
 
@@ -147,7 +148,7 @@ plt.text(0.5, 0.5, auprc)
 plt.title(f'{model_name} PRC')
 plt.xlabel('Recall')
 plt.ylabel('Precision')
-plot_f = f'llps-v2/figures/{model_name}_prc.png'
+plot_f = f'{config.eval["output_dir"]}{model_name}_prc.png'
 plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
 
