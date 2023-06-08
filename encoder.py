@@ -14,6 +14,15 @@ class Encoder (torch.nn.Module):
         x = self.pos_encoder(x)
         return self.encoder(x)
 
+# TODO: complete image convolutional encoder
+class ImageEncoder (torch.nn.Module):
+    def __init__(self, input_dim, dropout=0.3) -> None:
+        super().__init__()
+        self.model_type = 'Encoder'
+    
+    def forward(self, x):
+        x = self.pos_encoder(x)
+        return self.encoder(x)
 
 class PositionalEncoding (torch.nn.Module):
     def __init__(self, model_dim, dropout=0.5, max_len=5000) -> None:

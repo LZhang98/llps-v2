@@ -17,6 +17,8 @@ print(dir_path)
 
 print('=====================INPUTS===========================')
 
+print(sys.argv)
+
 print(f'model_name: {sys.argv[1]}')
 print(f'dataset: {sys.argv[2]}')
 print(f'batch_size: {sys.argv[3]}')

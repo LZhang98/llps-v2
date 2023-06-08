@@ -3,21 +3,25 @@ from dense import AdaptiveClassifier
 from encoder import Encoder
 from esm_pretrained import ESM
 
+# TODO: decide whether to allow for parallelizability -- should be able to switch between the two
 class Model (torch.nn.Module):
-    def __init__(self, device, num_layers, model_dim, num_heads, ff_dim, dropout=0.5, verbose=False, is_eval=False) -> None:
+    def __init__(self, device, num_layers, model_dim, num_heads, ff_dim, dropout=0.3, verbose=False, is_eval=False) -> None:
         super().__init__()
         self.esm = ESM(embed_dim=model_dim)
         self.device = device
         self.encoder = Encoder(num_layers=num_layers, model_dim=model_dim, num_heads=num_heads, ff_dim=ff_dim, dropout=dropout)
         self.classifier = AdaptiveClassifier(model_dim=model_dim)
 
+        self.encoder.to(self.device)
+        self.classifier.to(self.device)
+
         # wrap encoder and classifier in nn.DataParallel and send to GPU
-        model = torch.nn.Sequential(
-            self.encoder,
-            self.classifier
-        )
-        self.model = torch.nn.DataParallel(model)
-        self.model.to(self.device)
+        # model = torch.nn.Sequential(
+        #     self.encoder,
+        #     self.classifier
+        # )
+        # self.model = torch.nn.DataParallel(model)
+        # self.model.to(self.device)
 
         self.verbose = verbose
         self.is_eval = is_eval
@@ -40,7 +44,10 @@ class Model (torch.nn.Module):
             x = self.esm.get_representation(x)
         if self.verbose:
             print(x.size())
-        x = self.model(x)
+        # x = self.model(x)
+        x = self.encoder(x)
+        x = self.classifier(x)
+
         if self.verbose:
             print(x.size())
         return x
@@ -53,9 +60,13 @@ class Model (torch.nn.Module):
         for i in range(len(sequences)):
             inputs.append(('', sequences[i]))
         
+        # Turn single-node classification into 2-node binary classification
+        # q = 1 - p
         output = self(inputs)
-        
-        return output
+        complement = 1 - output
+        result = torch.cat([complement, output], axis=1)
+
+        return result
     
     def training_step(self, batch):
         loss = ...
@@ -71,6 +82,27 @@ class Model (torch.nn.Module):
         epoch_acc = ...
         return epoch_loss, epoch_acc
 
+class ImageModel (torch.nn.Module):
+    def __init__(self, device, num_layers, image_dim, model_dim, num_heads, ff_dim, dropout=0.3, verbose=False, is_eval=False) -> None:
+        super().__init__()
+        self.esm = ESM(embed_dim=model_dim)
+        self.device = device
+        self.encoder = Encoder(num_layers=num_layers, model_dim=model_dim, num_heads=num_heads, ff_dim=ff_dim, dropout=dropout)
+        self.classifier = AdaptiveClassifier(model_dim=model_dim)
+
+        # wrap encoder and classifier in nn.DataParallel and send to GPU
+        model = torch.nn.Sequential(
+            self.encoder,
+            self.classifier
+        )
+        self.model = torch.nn.DataParallel(model)
+        self.model.to(self.device)
+
+        self.verbose = verbose
+        self.is_eval = is_eval
+
+        if (not self.is_eval):
+            self.esm.model.to(self.device)
 
 if __name__ == '__main__':
 
