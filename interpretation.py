@@ -23,7 +23,8 @@ data = pd.read_csv(data_file)
 
 test_lst = data['sequences'][0:5].values.tolist()
 print('\nTEST LIST')
-print(test_lst)
+for x in test_lst:
+    print(len(x), x)
 
 # Initialize model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -36,19 +37,29 @@ num_samples = len(data)
 
 # Test predictions
 
+print('\nPREDICTIONS')
 test_output = my_model.predict(test_lst)
 print(test_output)
+print(test_output.size())
 
 # Set up interpreter
+print('\nINTERPRETATION')
+def my_split(seq):
+    # return list(seq)
+    return seq
 
-LIME_explainer = lime_text.LimeTextExplainer()
+LIME_explainer = lime_text.LimeTextExplainer(split_expression=my_split, class_names=['non-LLPS', 'LLPS'], verbose=True, char_level=True)
 
-explanations = []
-for i in range(5):
-    exp = LIME_explainer.explain_instance(test_lst[i], my_model.predict, num_features=50)
-    explanations.append(exp)
+exp = LIME_explainer.explain_instance(test_lst[0][0:100], my_model.predict, num_features=10)
 
-for i in range(5):
-    exp = explanations[i]
+print(exp.as_list())
+
+print('interpretation done. save fig')
+
+for i in range(1):
     exp.as_pyplot_figure()
     plt.savefig(output_dir + f'test_{i}.png')
+
+end_time = time.time()
+duration = end_time - start_time
+print(f'elapsed: {duration} seconds or {duration/60} minutes', )

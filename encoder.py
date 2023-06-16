@@ -16,13 +16,31 @@ class Encoder (torch.nn.Module):
 
 # TODO: complete image convolutional encoder
 class ImageEncoder (torch.nn.Module):
-    def __init__(self, input_dim, dropout=0.3) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.model_type = 'Encoder'
-    
+        self.model_type = 'ImageEncoder'
+
+        self.conv2d1 = torch.nn.Conv2d(in_channels=3, out_channels=1, kernel_size=5)
+        self.maxpool = torch.nn.MaxPool2d(kernel_size=2, stride=2)
+        self.conv2d2 = torch.nn.Conv2d(1, 1, 5)
+        self.conv2d3 = torch.nn.Conv2d(1, 1, 3)
+
+        self.encoder = torch.nn.Sequential(
+            self.conv2d1,   # b, 128, 128, 1
+            self.maxpool,   # b, 64, 64, 1
+            self.conv2d2,
+            self.maxpool,   # b, 32, 32, 1
+            self.conv2d3,
+            self.maxpool,   # b, 16, 16, 1
+        )
+
+        # b, 64
+        self.flatten = torch.nn.Flatten(start_dim=1)
+
     def forward(self, x):
-        x = self.pos_encoder(x)
-        return self.encoder(x)
+        x = self.encoder(x)
+        x = self.flatten(x)
+        return x
 
 class PositionalEncoding (torch.nn.Module):
     def __init__(self, model_dim, dropout=0.5, max_len=5000) -> None:

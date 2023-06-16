@@ -1,6 +1,6 @@
 import torch
 from dense import AdaptiveClassifier
-from encoder import Encoder
+from encoder import Encoder, ImageEncoder
 from esm_pretrained import ESM
 
 # TODO: decide whether to allow for parallelizability -- should be able to switch between the two
@@ -87,16 +87,10 @@ class ImageModel (torch.nn.Module):
         super().__init__()
         self.esm = ESM(embed_dim=model_dim)
         self.device = device
-        self.encoder = Encoder(num_layers=num_layers, model_dim=model_dim, num_heads=num_heads, ff_dim=ff_dim, dropout=dropout)
+        self.encoder = ImageEncoder()
         self.classifier = AdaptiveClassifier(model_dim=model_dim)
 
-        # wrap encoder and classifier in nn.DataParallel and send to GPU
-        model = torch.nn.Sequential(
-            self.encoder,
-            self.classifier
-        )
-        self.model = torch.nn.DataParallel(model)
-        self.model.to(self.device)
+        
 
         self.verbose = verbose
         self.is_eval = is_eval
