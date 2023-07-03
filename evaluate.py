@@ -26,12 +26,6 @@ print(f'threshold: {sys.argv[4]}')
 print(f'logfile: {sys.argv[5]}')
 
 print('=====================HYPERPARAMS======================')
-num_epochs = 200
-learning_rate = 1e-4
-num_layers = 1
-model_dim = 320
-num_heads = 4
-ff_dim = 320
 random_seed = 69
 batch_size = int(sys.argv[3])
 dropout = 0.3
@@ -39,12 +33,6 @@ loss_function = torch.nn.BCELoss()
 model_name = sys.argv[1]
 path = config.model['model_save_location']
 
-print(f'num_epochs: {num_epochs}')
-print(f'learning_rate: {learning_rate}')
-print(f'num_layers: {num_layers}')
-print(f'model_dim: {model_dim}')
-print(f'num_heads: {num_heads}')
-print(f'ff_dim: {ff_dim}')
 print(f'batch_size: {batch_size}')
 print(f'dropout: {dropout}')
 print(f'model_name: {model_name}')

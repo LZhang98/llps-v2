@@ -1,7 +1,4 @@
 import torch
-import torch.distributed as dist
-import torch.multiprocessing as mp
-from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader
 import dataset
 from model import Model
@@ -11,6 +8,7 @@ import sys
 from torch.utils.data.sampler import SubsetRandomSampler
 import numpy as np
 import config
+import os
 
 if __name__ == '__main__':
     
@@ -48,7 +46,10 @@ if __name__ == '__main__':
     model_dim = 320
     num_heads = 4
     ff_dim = 320
+
     random_seed = 69
+    torch.manual_seed(random_seed)
+
     batch_size = int(sys.argv[3])
     dropout = float(sys.argv[4])
     loss_function = torch.nn.BCELoss()
@@ -67,7 +68,7 @@ if __name__ == '__main__':
     print(f'batch_size: {batch_size}')
     print(f'model_name: {model_name}')
     print(f'dropout: {dropout}')
-    torch.manual_seed(random_seed)
+    print(f'random_seed: {random_seed}')
 
     # LOGGING 
     logfile = f'{config.training["log_location"]}{model_name}_log.csv'
@@ -182,3 +183,12 @@ if __name__ == '__main__':
     end_time = time.time()
     elapsed = end_time - start_time
     print(elapsed)
+
+def set_seed(s):
+   torch.manual_seed(s)
+   torch.cuda.manual_seed_all(s)
+   torch.backends.cudnn.deterministic = True
+   torch.backends.cudnn.benchmark = False
+   np.random.seed(s)
+   random.seed(s)
+   os.environ['PYTHONHASHSEED'] = str(s)
