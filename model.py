@@ -51,6 +51,32 @@ class Model (torch.nn.Module):
         if self.verbose:
             print(x.size())
         return x
+    
+    # for feature extraction
+    # model must be loaded on gpu, perhaps?
+    def get_encoder_embeddings(self, x):
+        x = self.esm.convert_batch(x)
+        x = x.to(self.device)
+        x = self.esm.get_representation(x)
+        x = self.encoder(x)
+        return x.detach().cpu()
+    
+    def extract_all_features(self, x):
+        a = self.esm.convert_batch(x)
+        a_gpu = a.to(self.device)
+        b = self.esm.get_representation(a_gpu)
+        c = self.encoder(b)
+
+        features = {
+            'tokens': a,
+            'esm': b.detach().cpu(),
+            'encoder': c.detach().cpu()
+        }
+        return features
+
+    # get tokens from esm tokenizer
+    def get_esm_tokens(self, x):
+        return self.esm.convert_batch(x)
 
     # Used for score prediction and model interpretation
     # TODO: input requirement of ESM embeddings is awkward: list of (label, seq) tuples. find way to fix.
