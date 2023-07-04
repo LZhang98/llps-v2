@@ -52,25 +52,26 @@ class Model (torch.nn.Module):
             print(x.size())
         return x
     
-    # for feature extraction
-    # model must be loaded on gpu, perhaps?
-    def get_encoder_embeddings(self, x):
-        x = self.esm.convert_batch(x)
-        x = x.to(self.device)
-        x = self.esm.get_representation(x)
-        x = self.encoder(x)
-        return x.detach().cpu()
-    
-    def extract_all_features(self, x):
+    def extract_features(self, x):
         a = self.esm.convert_batch(x)
         a_gpu = a.to(self.device)
         b = self.esm.get_representation(a_gpu)
-        c = self.encoder(b)
+        encoder_features = self.encoder.extract_features(b)
+        c = encoder_features[-1]
+        classifier_features = self.classifier.extract_features(c)
+        
+        for i in range(len(encoder_features)):
+            encoder_features[i] = encoder_features[i].detach().cpu()
+        
+        for i in range(len(classifier_features)):
+            classifier_features[i] = classifier_features[i].detach().cpu()
 
         features = {
             'tokens': a,
-            'esm': b.detach().cpu(),
-            'encoder': c.detach().cpu()
+            'esm': b,
+            'encoder': encoder_features,
+            'classifier': classifier_features[0:-1],
+            'output': classifier_features[-1]
         }
         return features
 
