@@ -95,7 +95,21 @@ class Model (torch.nn.Module):
 
         return result
     
-    def training_step(self, batch):
+    def training_step(self, batch, batch_size, optimizer, loss_function):
+
+        x, y = batch
+        inputs = []
+        for n in range(len(x)):
+            inputs.append((y[n], x[n]))
+
+        if batch_size > 1:
+            targets = y.unsqueeze(1).float().to(device)
+        else:
+            targets = y.float().to(device)
+        
+        optimizer.zero_grad()
+        outputs = self(inputs)
+
         loss = ...
         return loss
     
@@ -125,11 +139,42 @@ class ImageModel (torch.nn.Module):
         if (not self.is_eval):
             self.esm.model.to(self.device)
 
+class SimplifiedModel (torch.nn.Module):
+    # TODO: implement alternative architecture with MHSA module instead of transformer encoder.
+    # option: projection layer for ESM embedding?
+
+    def __init__(self, device, model_dim, num_heads, dropout=0.3, is_eval=False) -> None:
+        super().__init__()
+        self.esm = ESM(embed_dim=model_dim)
+        self.device = device
+        self.key = torch.nn.Linear()
+        self.mhsa = torch.nn.MultiheadAttention(embed_dim=model_dim, num_heads=num_heads, dropout=dropout, batch_first=True)
+        self.classifier = AdaptiveClassifier(model_dim=model_dim)
+
+        self.is_eval = is_eval
+
+        if (not self.is_eval):
+            self.esm.model.to(self.device)
+
+    def forward(self, x):
+        x = self.esm.convert_batch(x)
+        # TODO: make x to device smarter (determine if esm is sent to device or not)
+        if self.is_eval:
+            x = self.esm.get_representation(x)
+            x = x.to(self.device)
+        else:
+            x = x.to(self.device)
+            x = self.esm.get_representation(x)
+        
+        attn_output, attn_weights = self.mhsa(x, x, x)
+        x = self.classifier(attn_output)
+        return x
+
 if __name__ == '__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
-    my_model = Model(device, num_layers=1, model_dim=320, num_heads=4, ff_dim=320, dropout=0.3, verbose=True)
+    my_model = SimplifiedModel(device, model_dim=320, num_heads=4, dropout=0.3)
     print(my_model)
     test = [(0, 'AGFQPQSQGMSLNDFQKQQKQAAPKPKKTLKLVSSSGIKLANATKKVGTKPAESDKKEEEKSAETKEPTKEPTKVEEPVKKEEKPVQTEEKTEEKSELPKVEDLKISESTHNTNNANVTSADALIKEQEEEVDDEVVNDMFGGKDHVSLIFMGHVDAGKSTMGGNLLYLTGSVDKRTIEKYEREAKDAGRQGWYLSWVMDTNKEERNDGKTIEVGKAYFETEKRRYTILDAPGHKMYVSEMIGGASQADVGVLVISARKGEYETGFERGGQTREHALLAKTQGVNKMVVVVNKMDDPTVNWSKERYDQCVSNVSNFLRAIGYNIKTDVVFMPVSGYSGANLKDHVDPKECPWYTGPTLLEYLDTMNHVDRHINAPFMLPIAAKMKDLGTIVEGKIESGHIKKGQSTLLMPNKTAVEIQNIYNETENEVDMAMCGEQVKLRIKGVEEEDISPGFVLTSPKNPIKSVTKFVAQIAIVELKSIIAAGFSCVMHVHTAIEEVHIVKLLHKLEKGTNRKSKKPPAFAKKGMKVIAVLETEAPVCVETYQDYPQLGRFTLRDQGTTIAIGKIVKIAE')]
     a = my_model(test)
