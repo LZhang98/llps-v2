@@ -1,14 +1,14 @@
 import torch
 import sklearn.metrics
 import matplotlib.pyplot as plt
-from model import Model
-from dataset import SingleFileTestDataset
+from src.model import Model, SimplifiedModel
+from src.dataset import SingleFileTestDataset
 from torch.utils.data import DataLoader
 import time
 import sys
 import os
 import numpy as np
-import config
+import src.config as config
 
 start_time = time.time()
 
@@ -24,6 +24,7 @@ print(f'dataset: {sys.argv[2]}')
 print(f'batch_size: {sys.argv[3]}')
 print(f'threshold: {sys.argv[4]}')
 print(f'logfile: {sys.argv[5]}')
+print(f'model_type: {sys.argv[6]}')
 
 print('=====================HYPERPARAMS======================')
 random_seed = 69
@@ -43,7 +44,12 @@ print('=====================MODEL======================')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Set is_eval to True to keep ESM module on CPU (saves memory?)
-my_model = Model(device, 1, 320, 4, 320, 0.3, is_eval=True)
+model_type = sys.argv[6]
+if model_type == 'og':
+    my_model = Model(device, 1, 320, 4, 320, 0.3, is_eval=True)
+elif model_type == 'mhsa':
+    my_model = SimplifiedModel(device, 320, 4, is_eval=True)
+
 my_model.load_state_dict(torch.load(f'{path}{model_name}.pt', map_location=torch.device(device)))
 print(my_model)
 my_model.eval()

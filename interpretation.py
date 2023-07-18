@@ -1,9 +1,9 @@
 import torch
-from model import Model
+from src.model import Model, SimplifiedModel
 import time
 import sys
 import pandas as pd
-import config
+import src.config as config
 from lime import lime_text
 import matplotlib.pyplot as plt
 
@@ -48,9 +48,10 @@ def my_split(seq):
     # return list(seq)
     return seq
 
+# send to gpu, maybe?
 LIME_explainer = lime_text.LimeTextExplainer(split_expression=my_split, class_names=['non-LLPS', 'LLPS'], verbose=True, char_level=True)
 
-exp = LIME_explainer.explain_instance(test_lst[0][0:100], my_model.predict, num_features=10)
+exp = LIME_explainer.explain_instance(test_lst[0], my_model.predict, num_features=10)
 
 print(exp.as_list())
 

@@ -3,3 +3,4 @@ scripts/*
 output/*
 *config*
 *test*
+*__pycache__*

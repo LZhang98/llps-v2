@@ -1,7 +1,7 @@
 import torch
-from dense import AdaptiveClassifier
-from encoder import Encoder, ImageEncoder
-from esm_pretrained import ESM
+from .dense import AdaptiveClassifier
+from .encoder import Encoder, ImageEncoder
+from .esm_pretrained import ESM
 
 # TODO: decide whether to allow for parallelizability -- should be able to switch between the two
 class Model (torch.nn.Module):
@@ -131,8 +131,6 @@ class ImageModel (torch.nn.Module):
         self.encoder = ImageEncoder()
         self.classifier = AdaptiveClassifier(model_dim=model_dim)
 
-        
-
         self.verbose = verbose
         self.is_eval = is_eval
 
@@ -147,16 +145,18 @@ class SimplifiedModel (torch.nn.Module):
         super().__init__()
         self.esm = ESM(embed_dim=model_dim)
         self.device = device
-        self.key = torch.nn.Linear()
         self.mhsa = torch.nn.MultiheadAttention(embed_dim=model_dim, num_heads=num_heads, dropout=dropout, batch_first=True)
         self.classifier = AdaptiveClassifier(model_dim=model_dim)
 
         self.is_eval = is_eval
 
+        self.mhsa.to(self.device)
+        self.classifier.to(self.device)
+
         if (not self.is_eval):
             self.esm.model.to(self.device)
 
-    def forward(self, x):
+    def forward(self, x, extract_attn=False):
         x = self.esm.convert_batch(x)
         # TODO: make x to device smarter (determine if esm is sent to device or not)
         if self.is_eval:
@@ -167,8 +167,39 @@ class SimplifiedModel (torch.nn.Module):
             x = self.esm.get_representation(x)
         
         attn_output, attn_weights = self.mhsa(x, x, x)
+
         x = self.classifier(attn_output)
-        return x
+
+        if extract_attn == False:
+            return self.classifier(attn_output)
+        else:
+            return (x, attn_output, attn_weights)
+
+    def forward_on_lst_input(self, x, extract_attn=False):
+        print('executing forward_on_lst_input')
+
+        inputs = []
+        for i in range(len(x)):
+            inputs.append(('', x[i]))
+    
+        for n in inputs:
+            print(n)
+        
+        result = self(inputs, extract_attn)
+        return result
+
+    def forward_on_single_seq(self, x, extract_attn=False):
+        print('executing forward_on_single_seq')
+
+        input = []
+        input.append(('', x))
+
+        print(input)
+
+        result = self(input, extract_attn)
+        print(result)
+        return result
+        
 
 if __name__ == '__main__':
 

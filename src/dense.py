@@ -44,6 +44,18 @@ class AdaptiveClassifier (torch.nn.Module):
         x = self.pool(x).permute(0,2,1).squeeze()
         x = self.dense(x)
         return x
+    
+    def extract_features(self, x):
+        x = x.permute(0,2,1)
+        a = self.pool(x).permute(0,2,1).squeeze() # pool
+        b = self.dense[0](a) # Lin 1
+        c = self.dense[1](b) # ReLU
+        c = self.dense[2](c) # Lin 2
+        d = self.dense[3](c)
+
+        # [pool output, lin 1 output, lin 2 output, final output]
+        return [a, b, c, d]
+
 
 # class HybridClassifier (torch.nn.Module):
 #     def __init__(self, total_dim) -> None:

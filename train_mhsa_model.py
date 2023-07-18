@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 import src.dataset as dataset
-from src.model import Model
+from src.model import SimplifiedModel
 from datetime import date
 import time
 import sys
@@ -45,7 +45,6 @@ if __name__ == '__main__':
     num_layers = 1
     model_dim = 320
     num_heads = 4
-    ff_dim = 320
 
     random_seed = 69
     torch.manual_seed(random_seed)
@@ -56,7 +55,7 @@ if __name__ == '__main__':
 
     today = str(date.today())
     print(today)
-    model_name = f'{today}_e{num_epochs}_bs{batch_size}{tag}'
+    model_name = f'{today}_e{num_epochs}_bs{batch_size}_mhsa_{tag}'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     print(f'num_epochs: {num_epochs}')
@@ -64,7 +63,6 @@ if __name__ == '__main__':
     print(f'num_layers: {num_layers}')
     print(f'model_dim: {model_dim}')
     print(f'num_heads: {num_heads}')
-    print(f'ff_dim: {ff_dim}')
     print(f'batch_size: {batch_size}')
     print(f'model_name: {model_name}')
     print(f'dropout: {dropout}')
@@ -72,6 +70,7 @@ if __name__ == '__main__':
 
     # LOGGING 
     logfile = f'{config.training["log_location"]}{model_name}_log.csv'
+    print(logfile)
     print(f'logfile: {logfile}')
     with open(logfile, 'w') as f:
         f.write('epoch,training_loss,mean_pos,mean_neg,val_loss\n')
@@ -102,7 +101,7 @@ if __name__ == '__main__':
 
     # MODEL AND OPTIMIZER
     print('===========MODEL===========')
-    my_model = Model(device, num_layers, model_dim, num_heads, ff_dim, dropout)
+    my_model = SimplifiedModel(device, model_dim, num_heads, dropout)
     print(my_model)
     optimizer = torch.optim.Adam(my_model.parameters(), lr=learning_rate)
 
@@ -183,12 +182,3 @@ if __name__ == '__main__':
     end_time = time.time()
     elapsed = end_time - start_time
     print(elapsed)
-
-# def set_seed(s):
-#    torch.manual_seed(s)
-#    torch.cuda.manual_seed_all(s)
-#    torch.backends.cudnn.deterministic = True
-#    torch.backends.cudnn.benchmark = False
-#    np.random.seed(s)
-#    random.seed(s)
-#    os.environ['PYTHONHASHSEED'] = str(s)

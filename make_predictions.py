@@ -1,9 +1,9 @@
 import torch
-from model import Model
+from src.model import Model, SimplifiedModel
 import time
 import sys
 import pandas as pd
-import config
+import src.config as config
 
 start_time = time.time()
 
@@ -11,11 +11,12 @@ start_time = time.time()
 model_name = sys.argv[1]
 data_file = sys.argv[2]
 output_name = sys.argv[3]
+model_type = sys.argv[4]
 output_dir = config.model['output_dir']
 
 print('===============INPUTS================')
 
-print(model_name, data_file, output_name, output_dir)
+print(model_name, data_file, output_name, model_type, output_dir)
 
 # Set up data input and output
 output_file = f'{output_dir}/{model_name}_{output_name}.csv'
@@ -36,9 +37,13 @@ print('=============MODEL================')
 
 # Initialize model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-my_model = Model(device, 1, 320, 4, 320, 0.3, False, is_eval=True)
+if model_type == 'og':
+    my_model = Model(device, 1, 320, 4, 320, 0.3, False, is_eval=True)
+elif model_type == 'mhsa':
+    my_model = SimplifiedModel(device, 320, 4, is_eval=True)
 path = config.model['model_save_location']
 my_model.load_state_dict(torch.load(f'{path}{model_name}.pt', map_location=torch.device(device)))
+
 
 num_samples = len(data)
 with torch.no_grad():

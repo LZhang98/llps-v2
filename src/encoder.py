@@ -14,6 +14,12 @@ class Encoder (torch.nn.Module):
         x = self.pos_encoder(x)
         return self.encoder(x)
 
+    def extract_features(self, x):
+        a = self.pos_encoder(x)
+        b = self.encoder(a)
+
+        return [a, b]
+
 # TODO: complete image convolutional encoder
 class ImageEncoder (torch.nn.Module):
     def __init__(self) -> None:
