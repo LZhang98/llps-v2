@@ -8,17 +8,24 @@ import time
 import sys
 import os
 import numpy as np
-import src.config as config
+import json
 
 start_time = time.time()
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 print(dir_path)
 
+print('=====================CONFIGS==========================')
+# print relevant config settings for this script:
+config = json.load(dir_path + 'config.json')
+print(config['model_save_location'])
+print(config['evalation_dir'])
+
+model_save_loc = config['model_save_location']
+eval_dir = config['evalation_dir']
+
 print('=====================INPUTS===========================')
-
 print(sys.argv)
-
 print(f'model_name: {sys.argv[1]}')
 print(f'dataset: {sys.argv[2]}')
 print(f'batch_size: {sys.argv[3]}')
@@ -32,7 +39,6 @@ batch_size = int(sys.argv[3])
 dropout = 0.3
 loss_function = torch.nn.BCELoss()
 model_name = sys.argv[1]
-path = config.model['model_save_location']
 
 print(f'batch_size: {batch_size}')
 print(f'dropout: {dropout}')
@@ -50,7 +56,7 @@ if model_type == 'og':
 elif model_type == 'mhsa':
     my_model = SimplifiedModel(device, 320, 4, is_eval=True)
 
-my_model.load_state_dict(torch.load(f'{path}{model_name}.pt', map_location=torch.device(device)))
+my_model.load_state_dict(torch.load(f'{model_save_loc}{model_name}.pt', map_location=torch.device(device)))
 print(my_model)
 my_model.eval()
 
@@ -70,7 +76,7 @@ print(f'Data load: {data_time - model_time}')
 
 print('=====================EVALUATION======================')
 
-logfile = f'{config.eval["output_dir"]}{sys.argv[5]}.csv'
+logfile = f'{eval_dir}{sys.argv[5]}.csv'
 print(logfile)
 
 y_score = []
@@ -131,7 +137,7 @@ plt.text(0.5, 0.5, auroc)
 plt.title(f'{model_name} ROC')
 plt.xlabel('FPR')
 plt.ylabel('TPR')
-plot_f = f'{config.eval["output_dir"]}{model_name}_roc.png'
+plot_f = f'{eval_dir}{model_name}_roc.png'
 plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
 
@@ -144,7 +150,7 @@ plt.text(0.5, 0.5, auprc)
 plt.title(f'{model_name} PRC')
 plt.xlabel('Recall')
 plt.ylabel('Precision')
-plot_f = f'{config.eval["output_dir"]}{model_name}_prc.png'
+plot_f = f'{eval_dir}{model_name}_prc.png'
 plt.savefig(fname=plot_f)
 print(f'saved to {plot_f}')
 

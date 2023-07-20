@@ -1,0 +1,9 @@
+{
+    "sample_model_dir": "sample-model/",
+    "data_location": "data/",
+    "model_output_dir": "/home/lzhang98/scratch/predictions/",
+    "model_save_location": "/home/lzhang98/scratch/trained-models/",
+    "training_log_location": "/home/lzhang98/scratch/training-logs/",
+    "interpretation_dir": "/home/lzhang98/scratch/interpretation/",
+    "evaluation_dir": "/home/lzhang98/scratch/evaluation/"
+}
