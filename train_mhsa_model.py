@@ -58,7 +58,7 @@ if __name__ == '__main__':
     learning_rate = float(sys.argv[2])
     num_layers = 1
     model_dim = 320
-    num_heads = sys.argv[5]
+    num_heads = int(sys.argv[5])
 
     random_seed = 69
     torch.manual_seed(random_seed)
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     # DATASET
     # toy dataset first
     print('===========DATA===========')
-    training_file = dir_path + '/' + sys.argv[5]
+    training_file = dir_path + '/' + sys.argv[6]
     validation_split = 0.2
     data = dataset.SingleFileDataset(training_file, threshold=1500)
     print(training_file)
