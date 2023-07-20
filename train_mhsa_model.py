@@ -7,17 +7,30 @@ import time
 import sys
 from torch.utils.data.sampler import SubsetRandomSampler
 import numpy as np
-import src.config as config
 import os
+import json
 
 if __name__ == '__main__':
     
     start_time = time.time()
 
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    print(dir_path)
+
+    print('=====================CONFIGS=====================')
+
+    # print relevant config settings for this script:
+    config = json.load(open(dir_path + '/config.json'))
+    print(config['training_log_location'])
+    print(config['evaluation_dir'])
+
+    training_log_location = config['training_log_location']
+    model_save_loc = config['model_save_location']
+
     print('=====================INPUTS======================')
     
     print(sys.argv)
-    if len(sys.argv) < 6:
+    if len(sys.argv) < 7:
         print('param error. exiting.')
         sys.exit()
 
@@ -25,11 +38,12 @@ if __name__ == '__main__':
     print(f'learning_rate: {sys.argv[2]}')
     print(f'batch_size: {sys.argv[3]}')
     print(f'dropout: {sys.argv[4]}')
-    print(f'training_file: {sys.argv[5]}')
+    print(f'num_heads: {sys.argv[5]}')
+    print(f'training_file: {sys.argv[6]}')
 
-    if len(sys.argv) == 7:
-        print(f'tag: {sys.argv[6]}')
-        tag = sys.argv[6]
+    if len(sys.argv) == 8:
+        print(f'tag: {sys.argv[7]}')
+        tag = sys.argv[7]
     else:
         print('tag: -')
         tag = ''
@@ -44,7 +58,7 @@ if __name__ == '__main__':
     learning_rate = float(sys.argv[2])
     num_layers = 1
     model_dim = 320
-    num_heads = 4
+    num_heads = sys.argv[5]
 
     random_seed = 69
     torch.manual_seed(random_seed)
@@ -55,7 +69,7 @@ if __name__ == '__main__':
 
     today = str(date.today())
     print(today)
-    model_name = f'{today}_e{num_epochs}_bs{batch_size}_mhsa_{tag}'
+    model_name = f'{today}_e{num_epochs}_bs{batch_size}_nh{num_heads}_mhsa_{tag}'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     print(f'num_epochs: {num_epochs}')
@@ -69,7 +83,7 @@ if __name__ == '__main__':
     print(f'random_seed: {random_seed}')
 
     # LOGGING 
-    logfile = f'{config.training["log_location"]}{model_name}_log.csv'
+    logfile = f'{training_log_location}{model_name}_log.csv'
     print(logfile)
     print(f'logfile: {logfile}')
     with open(logfile, 'w') as f:
@@ -78,7 +92,7 @@ if __name__ == '__main__':
     # DATASET
     # toy dataset first
     print('===========DATA===========')
-    training_file = config.PROJECT_LOCATION+sys.argv[5]
+    training_file = dir_path + '/' + sys.argv[5]
     validation_split = 0.2
     data = dataset.SingleFileDataset(training_file, threshold=1500)
     print(training_file)
@@ -175,7 +189,7 @@ if __name__ == '__main__':
     # SAVE THE MODEL
     print('===========SAVING===========')
 
-    path = config.model['model_save_location'] + model_name + '.pt'
+    path = model_save_loc + model_name + '.pt'
     torch.save(my_model.state_dict(), path)
     print(f'Save to {path}')
 

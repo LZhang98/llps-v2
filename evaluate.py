@@ -17,12 +17,12 @@ print(dir_path)
 
 print('=====================CONFIGS==========================')
 # print relevant config settings for this script:
-config = json.load(dir_path + 'config.json')
+config = json.load(open(dir_path + '/config.json'))
 print(config['model_save_location'])
-print(config['evalation_dir'])
+print(config['evaluation_dir'])
 
 model_save_loc = config['model_save_location']
-eval_dir = config['evalation_dir']
+eval_dir = config['evaluation_dir']
 
 print('=====================INPUTS===========================')
 print(sys.argv)
